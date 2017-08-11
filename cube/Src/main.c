@@ -67,13 +67,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         HAL_GPIO_TogglePin(GPIOB, LD3_Pin);
         reboot_flag = 1;
 }
+
+void set_boot_addr(uint32_t addr)
+{
+        FLASH_OBProgramInitTypeDef fo;
+        fo.BootAddr0 = addr;
+        fo.OptionType = OPTIONBYTE_BOOTADDR_0;
+        HAL_FLASH_OB_Unlock();
+        HAL_FLASHEx_OBProgram(&fo);
+        HAL_FLASH_OB_Launch();
+        HAL_FLASH_OB_Lock();
+}
 /* USER CODE END 0 */
 
 int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-        FLASH_OBProgramInitTypeDef fo;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -98,13 +108,18 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOB, LD3_Pin|LD2_Pin, GPIO_PIN_SET);
 
+        FLASH_OBProgramInitTypeDef fo;
+        HAL_FLASHEx_OBGetConfig(&fo);
+        if (fo.BootAddr0 != OB_BOOTADDR_ITCM_FLASH) {
+                set_boot_addr(OB_BOOTADDR_ITCM_FLASH);
+                HAL_GPIO_WritePin(GPIOB, LD2_Pin, GPIO_PIN_RESET);
+        }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-        fo.BootAddr0 = OB_BOOTADDR_SYSTEM;
-        fo.OptionType = OPTIONBYTE_BOOTADDR_0;
 
   while (1)
   {
@@ -114,10 +129,7 @@ int main(void)
         if(reboot_flag)
         {
                 HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
-                HAL_FLASH_OB_Unlock();
-                HAL_FLASHEx_OBProgram(&fo);
-                HAL_FLASH_OB_Launch();
-                HAL_FLASH_OB_Lock();
+                set_boot_addr(OB_BOOTADDR_SYSTEM);
                 HAL_NVIC_SystemReset();
         }
   }

@@ -1,0 +1,1 @@
+/home/ii/projects/stm32f7_playground/cube/Inc/stm32f7xx_it.h

@@ -1,0 +1,1 @@
+/home/ii/projects/stm32f7_playground/cube/Src/stm32f7xx_hal_msp.c
